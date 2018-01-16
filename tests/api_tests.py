@@ -36,12 +36,6 @@ if not PY2:
 else:
     from urllib import unquote_plus as unquote_to_bytes
 
-internal_fake = 'internal_api_error_fake:'
-foo_bar = 'foobar'
-read_perm_req = 'You need read permission to use this module'
-invalid_already = 'already contains invalid name'
-no_multiple = 'The site can not be set multiple times'
-
 
 class TestAPIMWException(DefaultSiteTestCase):
 
@@ -91,9 +85,7 @@ class TestAPIMWException(DefaultSiteTestCase):
         req = api.Request(site=self.site, parameters={'action': 'query',
                                                       'fake': True})
         with PatchedHttp(api, self.data):
-            self.assertRaisesRegex(api.APIMWException,
-                                   internal_fake,
-                                   req.submit)
+            self.assertRaises(api.APIMWException, req.submit)
 
     def test_API_error_encoding_ASCII(self):
         """Test a Page instance as parameter using ASCII chars."""
@@ -103,9 +95,7 @@ class TestAPIMWException(DefaultSiteTestCase):
                                                       'titles': page})
         self.assert_parameters = {'fake': ''}
         with PatchedHttp(api, self._dummy_request):
-            self.assertRaisesRegex(api.APIMWException,
-                                   internal_fake,
-                                   req.submit)
+            self.assertRaises(api.APIMWException, req.submit)
 
     def test_API_error_encoding_Unicode(self):
         """Test a Page instance as parameter using non-ASCII chars."""
@@ -115,9 +105,7 @@ class TestAPIMWException(DefaultSiteTestCase):
                                                       'titles': page})
         self.assert_parameters = {'fake': ''}
         with PatchedHttp(api, self._dummy_request):
-            self.assertRaisesRegex(api.APIMWException,
-                                   internal_fake,
-                                   req.submit)
+            self.assertRaises(api.APIMWException, req.submit)
 
 
 class TestApiFunctions(DefaultSiteTestCase):
@@ -340,9 +328,8 @@ class TestParamInfo(DefaultSiteTestCase):
         pi.fetch('foobar')
         self.assertNotIn('foobar', pi._paraminfo)
 
-        self.assertRaisesRegex(KeyError, foo_bar, pi.__getitem__, 'foobar')
-        self.assertRaisesRegex(KeyError, foo_bar,
-                               pi.__getitem__, 'foobar+foobar')
+        self.assertRaises(KeyError, pi.__getitem__, 'foobar')
+        self.assertRaises(KeyError, pi.__getitem__, 'foobar+foobar')
 
         self.assertIn('main', pi._paraminfo)
         self.assertIn('paraminfo', pi._paraminfo)
@@ -367,9 +354,8 @@ class TestParamInfo(DefaultSiteTestCase):
             self.assertEqual(mod[6:], pi[mod]['name'])
             self.assertEqual(mod, pi[mod]['path'])
 
-        self.assertRaisesRegex(KeyError, foo_bar,
-                               pi.__getitem__, 'query+foobar')
-        self.assertRaisesRegex(KeyError, 'edit', pi.submodules, 'edit')
+        self.assertRaises(KeyError, pi.__getitem__, 'query+foobar')
+        self.assertRaises(KeyError, pi.submodules, 'edit')
 
     def test_query_modules_with_limits(self):
         """Test query_modules_with_limits property."""
@@ -511,10 +497,8 @@ class TestOptionSet(TestCase):
     def test_non_lazy_load(self):
         """Test OptionSet with initialised site."""
         options = api.OptionSet(self.get_site(), 'recentchanges', 'show')
-        self.assertRaisesRegex(KeyError, 'Invalid name',
-                               options.__setitem__, 'invalid_name', True)
-        self.assertRaisesRegex(ValueError, 'Invalid value',
-                               options.__setitem__, 'anon', 'invalid_value')
+        self.assertRaises(KeyError, options.__setitem__, 'invalid_name', True)
+        self.assertRaises(ValueError, options.__setitem__, 'anon', 'invalid_value')
         options['anon'] = True
         self.assertCountEqual(['anon'], options._enabled)
         self.assertEqual(set(), options._disabled)
@@ -541,13 +525,13 @@ class TestOptionSet(TestCase):
         options['anon'] = True
         self.assertIn('invalid_name', options._enabled)
         self.assertEqual(2, len(options))
-        self.assertRaisesRegex(KeyError, invalid_already, options._set_site,
-                               self.get_site(), 'recentchanges', 'show')
+        self.assertRaises(KeyError, options._set_site, self.get_site(),
+                          'recentchanges', 'show')
         self.assertEqual(2, len(options))
         options._set_site(self.get_site(), 'recentchanges', 'show', True)
         self.assertEqual(1, len(options))
-        self.assertRaisesRegex(TypeError, no_multiple, options._set_site,
-                               self.get_site(), 'recentchanges', 'show')
+        self.assertRaises(TypeError, options._set_site, self.get_site(),
+                          'recentchanges', 'show')
 
 
 class TestDryOptionSet(DefaultDrySiteTestCase):
@@ -666,10 +650,9 @@ class TestDryPageGenerator(TestCase):
 
     def test_namespace(self):
         """Test PageGenerator set_namespace."""
-        self.assertRaisesRegex(AssertionError, '^$', self.gen.set_namespace, 0)
-        self.assertRaisesRegex(AssertionError, '^$', self.gen.set_namespace, 1)
-        self.assertRaisesRegex(AssertionError, '^$',
-                               self.gen.set_namespace, None)
+        self.assertRaises(AssertionError, self.gen.set_namespace, 0)
+        self.assertRaises(AssertionError, self.gen.set_namespace, 1)
+        self.assertRaises(AssertionError, self.gen.set_namespace, None)
 
 
 class TestPropertyGenerator(TestCase):
@@ -828,8 +811,7 @@ class TestDryListGenerator(TestCase):
 
     def test_namespace_none(self):
         """Test ListGenerator set_namespace with None."""
-        self.assertRaisesRegex(TypeError, 'argument must be a string',
-                               self.gen.set_namespace, None)
+        self.assertRaises(TypeError, self.gen.set_namespace, None)
 
     def test_namespace_zero(self):
         """Test ListGenerator set_namespace with 0."""
@@ -963,10 +945,9 @@ class TestLazyLoginNotExistUsername(TestLazyLoginBase):
         """Test the query with a username which does not exist."""
         self.site._username = ['Not registered username', None]
         req = api.Request(site=self.site, parameters={'action': 'query'})
-        self.assertRaisesRegex(pywikibot.NoUsername,
-                               'does not have read permissions on', req.submit)
+        self.assertRaises(pywikibot.NoUsername, req.submit)
         # FIXME: T100965
-        self.assertRaisesRegex(api.APIError, read_perm_req, req.submit)
+        self.assertRaises(api.APIError, req.submit)
 
 
 class TestLazyLoginNoUsername(TestLazyLoginBase):
@@ -985,11 +966,9 @@ class TestLazyLoginNoUsername(TestLazyLoginBase):
             del pywikibot.config.usernames['steward']
 
         req = api.Request(site=self.site, parameters={'action': 'query'})
-        self.assertRaisesRegex(pywikibot.NoUsername,
-                               'If you have an account for that site',
-                               req.submit)
+        self.assertRaises(pywikibot.NoUsername, req.submit)
         # FIXME: T100965
-        self.assertRaisesRegex(api.APIError, read_perm_req, req.submit)
+        self.assertRaises(api.APIError, req.submit)
 
 
 class TestBadTokenRecovery(TestCase):
