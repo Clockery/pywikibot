@@ -666,7 +666,7 @@ class TestDryPageGenerator(TestCase):
 
     def test_namespace(self):
         """Test PageGenerator set_namespace."""
-        self.assertRaisesRegex(AssertionError, '^$', self.gen.set_namespace, 0)
+        self.assertRaisesRegex(AssertionError, None, self.gen.set_namespace, 0)
         self.assertRaisesRegex(AssertionError, '^$', self.gen.set_namespace, 1)
         self.assertRaisesRegex(AssertionError, '^$',
                                self.gen.set_namespace, None)
